@@ -1,0 +1,3 @@
+epoch	Error	Train%	TrErr	Test1%	Test1Err
+0	0.0	100.00	0.0015	89.36	0.0269	
+
