@@ -1,9 +1,14 @@
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
 #include <stdio.h>
 #include "backprop.h"
 #include <math.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <stdio.h>
+#include "kernel.h"
+
 
 #define WEIGHT_SATURATE	1
 #define ABS(x)          (((x) > 0.0) ? (x) : (-(x)))
@@ -217,16 +222,17 @@ void bpnn_layerforward(
   l1[0] = 1.0;
 
   /*** For each unit in second layer ***/
-  for (j = 1; j <= n2; j++) {
+  for (j = 1; j <= n2; j++)
+  {
 
     /*** Compute weighted sum of its inputs ***/
     sum = 0.0;
-    for (k = 0; k <= n1; k++) {
+    for (k = 0; k <= n1; k++)
+    {
       sum += conn[k][j] * l1[k];
     }
     l2[j] = squash(sum);
   }
-
 }
 
 void bpnn_output_error(
@@ -305,6 +311,22 @@ void bpnn_feedforward(
   bpnn_layerforward(net->hidden_units, net->output_units,
       net->hidden_weights, hid, out);
 
+}
+
+void bpnn_feedforward_GPU(
+    BPNN *net)
+{
+  int in, hid, out;
+
+  in = net->input_n;
+  hid = net->hidden_n;
+  out = net->output_n;
+
+  /*** Feed forward input activations. ***/
+  multiplication_GPU(net->input_units, net->hidden_units,
+                   net->input_weights, in, hid);
+  multiplication_GPU(net->hidden_units, net->output_units,
+                   net->hidden_weights, hid, out);
 }
 
 void bpnn_train(
